@@ -255,7 +255,7 @@ if '__main__' == __name__:
     r.seed(2)
     size = 50
     # keys = list(r.randint(-50, 50) for x in range(size)
-    keys = [5, 3, 6]          # 7, 2, 4, 21, 8, 99, 32, 23]
+    keys = [5, 3, 6, 7]          # 7, 2, 4, 21, 8, 99, 32, 23]
     t = RBTree()
 
     test_tree(t, keys)
