@@ -1,13 +1,14 @@
 import Color
 
+import random as r
 
-class RBNode(object):             # color-black tree's node
+class RBNode(object):             # red-black tree's node
 
     def __init__(self, key):      # constructor
-        """setters"""
         c = Color.Color()
+        """setters"""
         self._key = key           # Node's key
-        self._color = c.BLACK       # Node color: False = BLACK, True = color
+        self._color = c.BLACK       # Node color: False = BLACK, True = RED
         self._left = None         # Left child
         self._right = None        # Right child
         self._p = None            # Parent
@@ -19,12 +20,14 @@ class RBNode(object):             # color-black tree's node
     right = property(fget=lambda self: self._right, doc="The node's right child")
     p = property(fget=lambda self: self._p, doc="The node's parent")
 
-    def __repr__(self):           # node's string representation
+    def __str__(self):
+        return str(self.key)
+
+    def __repr__(self):
         return str(self.key)
 
 
 class RBTree(object):
-    c = Color.Color()
 
     def __init__(self, create_node=RBNode):    # tree constructor
 
@@ -35,147 +38,124 @@ class RBTree(object):
     root = property(fget=lambda self: self._root, doc="The tree's root node")
     nil = property(fget=lambda self: self._nil, doc="The tree's nil node")
 
-    def delete_key(self, key):   # operation that finds needed node and calls delete node func
+    def _sibling(self, x):        # returns node's left or right brother
+        assert x.p != self.nil
+        if x == x.p.left:
+            return x.p.right
+        else:
+            return x.p.left
+
+    def min_key(self, x=None):       # The minimum value in the subtree rooted at x
+        if x is None:
+            x = self.root
+        while x.left != self.nil:
+            x = x.left
+        return x.key
+
+    def max_key(self, x=None):       # The maximum value in the subtree rooted at x
+        if x is None:
+            x = self.root
+        while x.right != self.nil:
+            x = x.right
+        return x
+
+    def _replace_node(self, old, new):  # replacing node if some node is deleted
+        if old.p == self.nil:
+            self._root = new
+        else:
+            if old == old.p.left:
+                old.p._left = new
+            else:
+                old.p._right = new
+        if new != self.nil:
+            new._p = old.p
+
+    def delete_key(self, key):  # operation that finds needed node and calls delete node func
         node = self.search(key)
         if node == self.nil:
             return False
         self.delete_node(node)
         return True
 
-    def delete_node(self, x):    # directly node deletion
-        if x.left != self.nil and x.right != self.nil:
-            pred = self.max_key(x.left)
-            x._key = pred.key
-            x = pred
-        assert x.left == self.nil or x.right == self.nil
-        if x.right == self.nil:
-            child = x.left
-        else:
-            child = x.right
-        if not x.color:
-            x._color = child.color
-            self._delete_case1(x)
-        self._replace_node(x, child)
-        if self.root.color:
-            self.root._color = False
+    def delete_node(self, z):
+        c = Color.Color()
+        if not z or z == self.nil:
+            return
 
-    def _replace_node(self, oldn, newn):  # replacing node if some node is deleted
-        if oldn.p == self.nil:
-            self._root = newn
+        """if z has one child"""
+        if z.left == self.nil or z.right == self.nil:
+            y = z
         else:
-            if oldn == oldn.p.left:
-                oldn.p._left = newn
+            y = z.right
+            while y.left != self.nil:
+                y = y.left
+
+        """if x is y's only child"""
+        if y.left != self.nil:
+            x = y.left
+        else:
+            x = y.right
+
+        """remove y from the parent chain"""
+        x._p = y.p
+        if y.p:
+            if y == y.p.left:
+                y.p._left = x
             else:
-                oldn.p._right = newn
-        if newn != self.nil:
-            newn._p = oldn.p
+                y.p._right = x
+        else:
+            self._root = x
+        if y != z:
+            z._key = y.key
+        if y.color == c.BLACK:
+            self._delete_fix(x)
 
-    def _delete_case1(self, n):
-            """ In this case, N has become the root node. The deletion
-                removed one black node from every path, so no properties
-                are violated.
-            """
-            if n.p == self.nil:
-                return
+    def _delete_fix(self, x):
+        c = Color.Color()
+        while x == c.BLACK and x != self.root:
+            if x == x.p.left:
+                w = x.p.right
+                if w.color == c.RED:
+                    w._color = c.BLACK
+                    x.p._color = c.RED
+                    self._left_rotate(x.p)
+                    w = x.p.right
+                if w.left.color == c.BLACK and w.right.color == c.BLACK:
+                    w._color = c.RED
+                    x = x.p
+                else:
+                    if w.right.color == c.BLACK:
+                        w.left._color = c.BLACK
+                        w._color = c.RED
+                        self._right_rotate(w)
+                        w = x.p.right
+                    w._color = x.p.color
+                    x.p._color = c.BLACK
+                    w.right._color = c.BLACK
+                    self._left_rotate(x.p)
+                    x = self.root
             else:
-                self._delete_case2(n)
-
-    def _delete_case2(self, n):
-        """ N has a red sibling. In this case we exchange the colors
-            of the parent and sibling, then rotate about the parent
-            so that the sibling becomes the parent of its former
-            parent. This does not restore the tree properties, but
-            reduces the problem to one of the remaining cases. """
-
-        if self._sibling(n).color:
-            n.p.color = True
-            self._sibling(n)._color = False
-        if n == n.p.left:
-            self._left_rotate(n.p)
-        else:
-            self._right_rotate(n.p)
-        self._delete_case3(n)
-
-    def _delete_case3(self, n):
-        """ In this case N's parent, sibling, and sibling's children
-            are black. In this case we paint the sibling red. Now
-            all paths passing through N's parent have one less black
-            node than before the deletion, so we must recursively run
-            this procedure from case 1 on N's parent.
-        """
-        tmp = self._sibling(n)
-        if not n.p.color and not tmp.color and not tmp.left and not tmp.right:
-            tmp._color = True
-            self._delete_case1(n.p)
-        else:
-            self._delete_case4(n)
-
-    def _delete_case4(self, n):
-        """ N's sibling and sibling's children are black, but its
-        parent is red. We exchange the colors of the sibling and
-        parent; this restores the tree properties.
-        """
-        tmp = self._sibling(n)
-        if n.p.color and not tmp.color and not tmp.left.color and not tmp.right.color:
-            tmp._color = True
-            n.p._color = False
-        else:
-            self._delete_case5(n)
-
-    def _delete_case5(self, n):
-        """ There are two cases handled here which are mirror images
-        of one another:
-            N's sibling S is black, S's left child is red, S's
-            right child is black, and N is the left child of its
-            parent. We exchange the colors of S and its left
-            sibling and rotate right at S.
-            N's sibling S is black, S's right child is red,
-            S's left child is black, and N is the right child of
-            its parent. We exchange the colors of S and its right
-            sibling and rotate left at S.
-            Both of these function to reduce us to the situation
-            described in case 6. """
-        tmp = self._sibling(n)
-        if n == n.p.left and not tmp.color and tmp.left and not tmp.right:
-            tmp._color = True
-            tmp.left._color = False
-            self._right_rotate(tmp)
-        elif n == n.p.right and not tmp.color and tmp.right and not tmp.left:
-            tmp._color = True
-            tmp.right._color = False
-            self._left_rotate(tmp)
-            self._delete_case6(n)
-
-    def _delete_case6(self, n):
-        """ There are two cases handled here which are mirror images
-        of one another:
-        N's sibling S is black, S's right child is red, and N is
-        the left child of its parent. We exchange the colors of
-        N's parent and sibling, make S's right child black, then
-        rotate left at N's parent.
-        N's sibling S is black, S's left child is red, and N is
-        the right child of its parent. We exchange the colors of
-        N's parent and sibling, make S's left child black, then
-        rotate right at N's parent.
-        """
-        tmp = self._sibling(n)
-        tmp._color = n.p.color
-        n.p._color = False
-        if n == n.p.left:
-            assert tmp.right.color
-            tmp.right._color = False
-            self._left_rotate(n.p)
-        else:
-            assert tmp.left.color
-            tmp.left._color = False
-            self._right_rotate(n.p)
-
-    def _sibling(self, x):        # returns node's n left or right brother
-        assert x.p != self.nil
-        if x == x.p.left:
-            return x.p.right
-        else:
-            return x.p.left
+                w = x.p.left
+                if w.color == c.RED:
+                    w._color = c.BLACK
+                    x.p._color = c.RED
+                    self._right_rotate(x.p)
+                    w = x.p.left
+                if w.right.color == c.BLACK and w.left.color == c.BLACK:
+                    w._color = c.RED
+                    x = x.p
+                else:
+                    if w.left.color == c.BLACK:
+                        w.right._color = c.BLACK
+                        w._color = c.RED
+                        self._left_rotate(w)
+                        w = x.p.left
+                    w._color = x.p.color
+                    x.p._color = c.BLACK
+                    w.left._color = c.BLACK
+                    self._right_rotate(x.p)
+                    x = self.root
+        x._color = c.BLACK
 
     def search(self, key, x=None):
         """
@@ -190,20 +170,6 @@ class RBTree(object):
                 x = x.left
             else:
                 x = x.right
-        return x
-
-    def min_key(self, x=None):       # The minimum value in the subtree rooted at x
-        if x is None:
-            x = self.root
-        while x.left != self.nil:
-            x = x.left
-        return x.key
-
-    def max_key(self, x=None):       # The maximum value in the subtree rooted at x
-        if x is None:
-            x = self.root
-        while x.right != self.nil:
-            x = x.right
         return x
 
     def insert_key(self, key):  # Insert the key into the tree
@@ -345,9 +311,9 @@ def write_tree_as_dot(t, f, show_nil=False):  # writing file in a file f.dot
 
     def node_color(node):
         if node.color:
-            return "red"
+            return "RED"
         else:
-            return "black"
+            return "BLACK"
 
     def visit_node(node):                      # BFA pre-order search
         f.write("  %s [key=\"%s\", color=\"%s\"];\n" % (node_id(node), node, node_color(node)))
@@ -379,20 +345,18 @@ if '__main__' == __name__:
     import os
     import random as r
 
-
     def write_tree(t, filename):  # Write the tree as an SVG file
         f = open('%s.dot' % filename, 'w')
         write_tree_as_dot(t, f)
         f.close()
         os.system('dot %s.dot -T svg -o %s.svg' % (filename, filename))
 
-
-    # test the RBTree
     r.seed(2)
     size = 50
     # keys = list(r.randint(-50, 50) for x in range(size)
     keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 32, 23]
     t = RBTree()
-
     test_tree(t, keys)
+    t.delete_key(7)
+    assert t.check_prop()
     write_tree(t, 'tree')
