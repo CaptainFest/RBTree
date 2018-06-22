@@ -81,22 +81,16 @@ class RBTree(object):
         c = Color.Color()
         if not z or z == self.nil:
             return
-
-        """if z has one child"""
         if z.left == self.nil or z.right == self.nil:
             y = z
         else:
             y = z.right
             while y.left != self.nil:
                 y = y.left
-
-        """if x is y's only child"""
         if y.left != self.nil:
             x = y.left
         else:
             x = y.right
-
-        """remove y from the parent chain"""
         x._p = y.p
         if y.p:
             if y == y.p.left:
@@ -157,12 +151,7 @@ class RBTree(object):
                     x = self.root
         x._color = c.BLACK
 
-    def search(self, key, x=None):
-        """
-        Search the subtree rooted at x (or the root if not given) iteratively for the key.
-        
-        @return: self.nil if it cannot find it.
-        """
+    def search(self, key, x=None): # Search the subtree rooted at x
         if x is None:
             x = self.root
         while x != self.nil and key != x.key:
@@ -172,10 +161,10 @@ class RBTree(object):
                 x = x.right
         return x
 
-    def insert_key(self, key):  # Insert the key into the tree
+    def insert_key(self, key):     # Insert the key into the tree
         self.insert_node(self._create_node(key=key))
 
-    def insert_node(self, z):  # Insert node z into the tree
+    def insert_node(self, z):      # Insert node z into the tree
         c = Color.Color()
         y = self.nil
         x = self.root
@@ -293,18 +282,11 @@ class RBTree(object):
                 if not right_ok:
                     return 0, False
 
-                # check children's counts are ok
-                if left_counts != right_counts:
-                    return 0, False
-                return left_counts, True
-            else:
-                return 0, True
-
         num_black, is_ok = is_red_black_node(self.root)
         return is_ok and not self.root.color
 
 
-def write_tree_as_dot(t, f, show_nil=False):  # writing file in a file f.dot
+def save_in(t, f, show_nil=False):  # writing file in a file f.dot
 
     def node_id(node):
         return 'N%d' % id(node)
@@ -330,33 +312,76 @@ def write_tree_as_dot(t, f, show_nil=False):  # writing file in a file f.dot
     visit_node(t.root)
 
 
-def test_tree(t, keys):   # Insert keys one by one checking prop
-    assert t.check_prop()
+def test_insert(t):   # Insert keys one by one checking prop
+    keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 9, 32, 23]
     for i, key in enumerate(keys):
-        for key2 in keys[:i]:
-            assert t.nil != t.search(key2)
-        for key2 in keys[i:]:
-            assert (t.nil == t.search(key2)) ^ (key2 in keys[:i])
         t.insert_key(key)
         assert t.check_prop()
+
+
+def test_min_max(t):
+    keys = [5, 3, 21, 32]
+    for i, key in enumerate(keys):
+        t.max_key(key)
+        t.min_key(key)
+
+
+def test_search(t):
+    skeys = [6, 3, 24, 23, 99, 101]
+    for i, key in enumerate(skeys):
+        if t.search(key):
+            print("key " + key + " exists")
+        else:
+            print("key " + key + " is not exist")
+
+
+def test_random_insert(t):
+    rand_keys = list(np.random.permutation(200))
+    rand_keys = r.shuffle(rand_keys)
+    size = 50
+    for i, key in enumerate(rand_keys):
+        t.insert_key(key)
+        if i + 1 == s:
+            break
+    assert t.check_prop()
+
+
+def test_delete(t):
+    keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 9, 32, 23]
+    dkeys = [3, 6, 21, 99]
+    for i, key in enumerate(keys):
+        t.insert_key(key)
+    for i, dkey in enumerate(dkeys):
+        t.delete_key(dkey)
+    assert t.check_prop()
 
 
 if '__main__' == __name__:
     import os
     import random as r
 
-    def write_tree(t, filename):  # Write the tree as an SVG file
+    def write_tree(tree, filename):  # Write the tree as an SVG file
         f = open('%s.dot' % filename, 'w')
-        write_tree_as_dot(t, f)
+        save_in(tree, f)
         f.close()
         os.system('dot %s.dot -T svg -o %s.svg' % (filename, filename))
 
     r.seed(2)
-    size = 50
-    # keys = list(r.randint(-50, 50) for x in range(size)
-    keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 32, 23]
     t = RBTree()
-    test_tree(t, keys)
-    t.delete_key(7)
-    assert t.check_prop()
-    write_tree(t, 'tree')
+    print("Введите цифру 1, если хотите построить дерево со случайным набором ключей\n")
+    print("Введите цифру 2, если хотите построить дерево с заданным набором ключей, чтобы проверить вставку")
+    print("Введите цифру 3, если хотите протестировать удаление узлов")
+    print("Введите цифру 4, если хотите протестировать max и min")
+    print("Введите цифру 5, если хотите протестировать поиск")
+    a = int(input())
+    if a == 1:
+        test_random_insert(t)
+    elif a == 2:
+        test_insert(t)
+    elif a == 3:
+        test_delete(t)
+    elif a == 4:
+        test_min_max(t)
+    elif a == 5:
+        test_search(t)
+    save_in(t, 'tree')
