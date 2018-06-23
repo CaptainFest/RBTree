@@ -1,7 +1,5 @@
 import Color
 
-import random as r
-
 class RBNode(object):             # red-black tree's node
 
     def __init__(self, key):      # constructor
@@ -282,11 +280,18 @@ class RBTree(object):
                 if not right_ok:
                     return 0, False
 
+                # check children's counts are ok
+                if left_counts != right_counts:
+                    return 0, False
+                return left_counts, True
+            else:
+                    return 0, True
+
         num_black, is_ok = is_red_black_node(self.root)
         return is_ok and not self.root.color
 
 
-def save_in(t, f, show_nil=False):  # writing file in a file f.dot
+def save_as_dot(t, f, show_nil=False):  # writing file in a file f.dot
 
     def node_id(node):
         return 'N%d' % id(node)
@@ -316,44 +321,57 @@ def test_insert(t):   # Insert keys one by one checking prop
     keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 9, 32, 23]
     for i, key in enumerate(keys):
         t.insert_key(key)
-        assert t.check_prop()
+    assert t.check_prop()
 
 
 def test_min_max(t):
-    keys = [5, 3, 21, 32]
+    keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 9, 32, 23]
+    m_keys = [5, 3, 21, 10, 32]
     for i, key in enumerate(keys):
-        t.max_key(key)
-        t.min_key(key)
+        t.insert_key(key)
+    for i, m_key in enumerate(m_keys):
+        if t.search(m_key):
+            print("максимум в поддереве узла", m_key, " = " + t.max_key(m_key))
+            print("минимум в поддереве узла", m_key, " = " + t.min_key(m_key))
+            print("\n")
+        else:
+            print("нет узла " + m_key + "в дереве")
 
 
 def test_search(t):
-    skeys = [6, 3, 24, 23, 99, 101]
-    for i, key in enumerate(skeys):
-        if t.search(key):
-            print("key " + key + " exists")
+    keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 9, 32, 23]
+    s_keys = [6, 3, 24, 23, 99, 101]
+    for i, key in enumerate(keys):
+        t.insert_key(key)
+    for i, s_key in enumerate(s_keys):
+        if t.search(s_key):
+            print("key " + s_key + " exists")
         else:
-            print("key " + key + " is not exist")
+            print("key " + s_key + " is not exist")
+        print("\n")
 
 
 def test_random_insert(t):
-    rand_keys = list(np.random.permutation(200))
-    rand_keys = r.shuffle(rand_keys)
     size = 50
+    max_key = 200
+    rand_keys = list(r.sample(range(max_key), size))
     for i, key in enumerate(rand_keys):
         t.insert_key(key)
-        if i + 1 == s:
-            break
     assert t.check_prop()
 
 
 def test_delete(t):
     keys = [5, 3, 6, 7, 2, 4, 21, 8, 99, 9, 32, 23]
-    dkeys = [3, 6, 21, 99]
+    dkeys = [3, 21, 7, 32]
     for i, key in enumerate(keys):
         t.insert_key(key)
     for i, dkey in enumerate(dkeys):
         t.delete_key(dkey)
     assert t.check_prop()
+
+
+def tree_height(t):
+    print()
 
 
 if '__main__' == __name__:
@@ -362,7 +380,7 @@ if '__main__' == __name__:
 
     def write_tree(tree, filename):  # Write the tree as an SVG file
         f = open('%s.dot' % filename, 'w')
-        save_in(tree, f)
+        save_as_dot(tree, f)
         f.close()
         os.system('dot %s.dot -T svg -o %s.svg' % (filename, filename))
 
@@ -384,4 +402,4 @@ if '__main__' == __name__:
         test_min_max(t)
     elif a == 5:
         test_search(t)
-    save_in(t, 'tree')
+    write_tree(t, 'tree')
