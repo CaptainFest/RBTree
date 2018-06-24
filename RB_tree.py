@@ -1,5 +1,6 @@
 import Color
 
+
 class RBNode(object):             # red-black tree's node
 
     def __init__(self, key):      # constructor
@@ -149,7 +150,7 @@ class RBTree(object):
                     x = self.root
         x._color = c.BLACK
 
-    def search(self, key, x=None): # Search the subtree rooted at x
+    def search(self, key, x=None):  # Search the subtree rooted at x
         if x is None:
             x = self.root
         while x != self.nil and key != x.key:
@@ -330,12 +331,13 @@ def test_min_max(t):
     for i, key in enumerate(keys):
         t.insert_key(key)
     for i, m_key in enumerate(m_keys):
-        if t.search(m_key):
-            print("максимум в поддереве узла", m_key, " = " + t.max_key(m_key))
-            print("минимум в поддереве узла", m_key, " = " + t.min_key(m_key))
-            print("\n")
+        if t.search(m_key).key is not None:
+            print("максимум в поддереве узла", m_key, " = ", t.max_key(t.search(m_key)))
+            print("минимум в поддереве узла", m_key, " = ", t.min_key(t.search(m_key)))
+            print("")
         else:
-            print("нет узла " + m_key + "в дереве")
+            print("нет узла", m_key, "в дереве")
+            print("")
 
 
 def test_search(t):
@@ -344,11 +346,10 @@ def test_search(t):
     for i, key in enumerate(keys):
         t.insert_key(key)
     for i, s_key in enumerate(s_keys):
-        if t.search(s_key):
-            print("key " + s_key + " exists")
+        if t.search(s_key).key is not None:
+            print("key", s_key, "exists")
         else:
-            print("key " + s_key + " is not exist")
-        print("\n")
+            print("key", s_key, "is not exist")
 
 
 def test_random_insert(t):
@@ -386,7 +387,7 @@ if '__main__' == __name__:
 
     r.seed(2)
     t = RBTree()
-    print("Введите цифру 1, если хотите построить дерево со случайным набором ключей\n")
+    print("Введите цифру 1, если хотите построить дерево со случайным набором ключей и определить его высоту")
     print("Введите цифру 2, если хотите построить дерево с заданным набором ключей, чтобы проверить вставку")
     print("Введите цифру 3, если хотите протестировать удаление узлов")
     print("Введите цифру 4, если хотите протестировать max и min")
