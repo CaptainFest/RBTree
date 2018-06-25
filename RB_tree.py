@@ -347,8 +347,8 @@ def test_insert(t):   # Insert keys one by one checking prop
     for i, key in enumerate(keys):
         t.insert_key(key)
     assert t.check_prop()
-    print("Черная высота дерева = ", t.tree_black_height())
-    print("Высота дерева = ", t.tree_height())
+    # print("Черная высота дерева = ", t.tree_black_height())
+    # print("Высота дерева = ", t.tree_height())
 
 
 def test_min_max(t):
@@ -379,14 +379,12 @@ def test_search(t):
 
 
 def test_random_insert(t, s):
-    max_key = 100
+    max_key = 2000
     r.seed(2)
     rand_keys = list(r.SystemRandom().sample(range(max_key), s))
     for i, key in enumerate(rand_keys):
         t.insert_key(key)
     assert t.check_prop()
-    """print("Черная высота дерева = ", t.tree_black_height())
-    print("Высота дерева = ", t.tree_height())"""
 
 
 def test_delete(t):
@@ -416,9 +414,9 @@ if '__main__' == __name__:
     print("Введите цифру 3, если хотите протестировать удаление узлов")
     print("Введите цифру 4, если хотите протестировать max и min")
     print("Введите цифру 5, если хотите протестировать поиск")
-    a = 1 # int(input())
+    a = int(input())
     if a == 1:
-        for size in range(40, 101, 1):
+        for size in range(1, 101, 1):
             h_1, h_2, hh_1, hh_2, c_1, c_2, c_3, c_4 = 0, 0, 0, 0, 0, 0, 0, 0
             for i in range(1000):
                 t = RBTree()
