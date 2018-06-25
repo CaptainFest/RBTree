@@ -218,6 +218,30 @@ class RBTree(object):
                     self._left_rotate(z.p.p)
         self.root._color = c.BLACK
 
+    def tree_black_height(self):
+        x = self.root
+        count = 0
+        while x is not None:
+            if not x.color or x == self.nil:
+                count += 1
+            x = x.left
+        return count
+
+    def tree_height(self, x=None, l_height=0, r_height=0):
+        if x is None:
+            x = self.root
+        if x.left is None and x.right is None:
+            return 1
+        else:
+            if x.left is not None:
+                l_height = self.tree_height(x.left, l_height, r_height)
+            if x.right is not None:
+                r_height = self.tree_height(x.right, l_height, r_height)
+            if l_height > r_height:
+                return l_height + 1
+            else:
+                return r_height + 1
+
     def _left_rotate(self, x):  # rotate node x to left
         y = x.right
         x._right = y.left
@@ -292,7 +316,7 @@ class RBTree(object):
         return is_ok and not self.root.color
 
 
-def save_as_dot(t, f, show_nil=False):  # writing file in a file f.dot
+def save_as_dot(t, f,):  # writing file in a file f.dot
 
     def node_id(node):
         return 'N%d' % id(node)
@@ -306,11 +330,11 @@ def save_as_dot(t, f, show_nil=False):  # writing file in a file f.dot
     def visit_node(node):                      # BFA pre-order search
         f.write("  %s [key=\"%s\", color=\"%s\"];\n" % (node_id(node), node, node_color(node)))
         if node.left:
-            if node.left != t.nil or show_nil:
+            if node.left != t.nil:
                 visit_node(node.left)
                 f.write("  %s -> %s ; \n" % (node_id(node), node_id(node.left)))
         if node.right:
-            if node.right != t.nil or show_nil:
+            if node.right != t.nil:
                 visit_node(node.right)
                 f.write("  %s -> %s ; \n" % (node_id(node), node_id(node.right)))
 
@@ -323,6 +347,8 @@ def test_insert(t):   # Insert keys one by one checking prop
     for i, key in enumerate(keys):
         t.insert_key(key)
     assert t.check_prop()
+    print("Черная высота дерева = ", t.tree_black_height())
+    print("Высота дерева = ", t.tree_height())
 
 
 def test_min_max(t):
@@ -352,13 +378,15 @@ def test_search(t):
             print("key", s_key, "is not exist")
 
 
-def test_random_insert(t):
-    size = 50
-    max_key = 200
-    rand_keys = list(r.sample(range(max_key), size))
+def test_random_insert(t, s):
+    max_key = 100
+    r.seed(2)
+    rand_keys = list(r.SystemRandom().sample(range(max_key), s))
     for i, key in enumerate(rand_keys):
         t.insert_key(key)
     assert t.check_prop()
+    """print("Черная высота дерева = ", t.tree_black_height())
+    print("Высота дерева = ", t.tree_height())"""
 
 
 def test_delete(t):
@@ -369,10 +397,6 @@ def test_delete(t):
     for i, dkey in enumerate(dkeys):
         t.delete_key(dkey)
     assert t.check_prop()
-
-
-def tree_height(t):
-    print()
 
 
 if '__main__' == __name__:
@@ -392,9 +416,30 @@ if '__main__' == __name__:
     print("Введите цифру 3, если хотите протестировать удаление узлов")
     print("Введите цифру 4, если хотите протестировать max и min")
     print("Введите цифру 5, если хотите протестировать поиск")
-    a = int(input())
+    a = 1 # int(input())
     if a == 1:
-        test_random_insert(t)
+        for size in range(40, 101, 1):
+            h_1, h_2, hh_1, hh_2, c_1, c_2, c_3, c_4 = 0, 0, 0, 0, 0, 0, 0, 0
+            for i in range(1000):
+                t = RBTree()
+                test_random_insert(t, size)
+                if i == 0:
+                    h_1 = t.tree_height()
+                    h_2 = t.tree_black_height()
+                if t.tree_height() == h_1:
+                    c_1 += 1
+                else:
+                    hh_1 = t.tree_height()
+                    c_2 += 1
+                if t.tree_black_height() == h_2:
+                    c_3 += 1
+                else:
+                    hh_2 = t.tree_black_height()
+                    c_4 += 1
+            print("----------")
+            print("Количество ключей = %d" % size)
+            print("Средняя черн высота дерева = %f" % ((h_2 * c_3 + hh_2 * c_4) / 1000))
+            print("Средняя высота дерева = %f" % ((h_1 * c_1 + hh_1 * c_2) / 1000))
     elif a == 2:
         test_insert(t)
     elif a == 3:
