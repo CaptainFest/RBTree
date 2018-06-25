@@ -416,7 +416,7 @@ if '__main__' == __name__:
     print("Введите цифру 5, если хотите протестировать поиск")
     a = int(input())
     if a == 1:
-        for size in range(1, 101, 1):
+        for size in range(30, 101, 10):
             h_1, h_2, hh_1, hh_2, c_1, c_2, c_3, c_4 = 0, 0, 0, 0, 0, 0, 0, 0
             for i in range(1000):
                 t = RBTree()
