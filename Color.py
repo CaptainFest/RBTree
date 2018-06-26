@@ -3,5 +3,10 @@ class Color(object):    # subclass color of nodes
         self._RED = True
         self._BLACK = False
 
-    RED = property(fget=lambda self: self._RED, doc="node's RED color")
-    BLACK = property(fget=lambda self: self._BLACK, doc="node's BLACK color")
+    @property
+    def RED(self):
+        return self._RED
+
+    @property
+    def BLACK(self):
+        return self._BLACK
